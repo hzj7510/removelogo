@@ -38,11 +38,11 @@ def convert_image(img1, nologo_path, logo_path, error_path, q, lock):
             img2 = cv2.imread('img.png')
             gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-            dst = SIFE_images(img1, gray1=gray1, gray2=gray2)
+            dst, is_all_white = SIFE_images(img1, img2, gray1=gray1, gray2=gray2)
             if dst is not None:
-                num = check_white_point_number(img2, [np.int32(dst)])
+                # num = check_white_point_number(img2, [np.int32(dst)])
                 # 保存到处理目录
-                if num > 0.4:
+                if is_all_white:
                     fill_image_with_white(origin_img2, np.int32(dst))
                     cv2.imwrite(get_file_path(nologo_path, image_file), origin_img2)
                 else:
@@ -55,6 +55,7 @@ def convert_image(img1, nologo_path, logo_path, error_path, q, lock):
             with g_lock:
                 execute_files.value += 1
         except Exception as e:
+            print(e)
             cv2.imwrite(get_file_path(error_path, image_file), origin_img2)
             global error_files
             with g_lock:
@@ -72,15 +73,19 @@ if __name__ == '__main__':
     # if args.sp:
     #     save_path = args.sp
 
-    image_path = '/Users/swift/Desktop/removelogo/logoimages'
-    save_path = '/Users/swift/Desktop/removelogo1'
+    # /Users/swift/Downloads/xunmall-shop-upload/
+
+    image_path = '/Users/swift/Downloads/xunmall-shop-upload800/'
+    save_path = '/Users/swift/Desktop/shopremovelogo800'
+    # image_path = '/Users/swift/Desktop/ttttt'
+    # save_path = '/Users/swift/Desktop/shoptest'
     # try:
     nologo_path, logo_path, error_path = make_dir(save_path)
     # except Exception as e:
     #     print(e)
     # image_files = read_files(image_path, q)
 
-    origin_img1 = read_image('/Users/swift/Desktop/logonologo/logo/big1.jpg')
+    origin_img1 = read_image('/Users/swift/Desktop/logonologo/logo/shop800.png')
     img_arr1 = change_image(origin_img1)
     cv2.imwrite('logo.png', img_arr1)
     img1 = cv2.imread('logo.png')
@@ -92,7 +97,8 @@ if __name__ == '__main__':
     # 创建进程池
     p = Pool(processes=4)
     # 添加读取数据进程
-    read_files(image_path, q, lock)
+    p.apply_async(read_files, args=(image_path, q, lock))
+    # read_files(image_path, q, lock)
     # 添加数据转换的进程
     p.apply_async(convert_image, args=(img1, nologo_path, logo_path, error_path, q, lock))
     p.apply_async(convert_image, args=(img1, nologo_path, logo_path, error_path, q, lock))

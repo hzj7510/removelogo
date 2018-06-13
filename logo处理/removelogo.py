@@ -35,7 +35,7 @@ def change_image(img):
     return np.array(img_arr)
 
 
-def SIFE_images(img1, gray1, gray2):
+def SIFE_images(img1, img2, gray1, gray2):
     sift = cv2.xfeatures2d.SIFT_create()
     matcher = cv2.FlannBasedMatcher(dict(algorithm=1, trees=5), {})
     kpts1, descs1 = sift.detectAndCompute(gray1, None)
@@ -60,12 +60,25 @@ def SIFE_images(img1, gray1, gray2):
         h, w = img1.shape[:2]
         pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
         dst = cv2.perspectiveTransform(pts, M)
+        if dst is not None:
         ## 绘制边框
         # cv2.polylines(canvas, [np.int32(dst)], True, (0, 255, 0), 3, cv2.LINE_AA)
-        return dst
+            perspectiveM = cv2.getPerspectiveTransform(np.float32(dst), pts)
+            found = cv2.warpPerspective(img2, perspectiveM, (w, h))
+            left_col = found[:, 0]
+            # print(left_col)
+            is_all_white = True
+            # print(len(left_col))
+            for x in left_col:
+                if not np.sum(x) > 660:
+                    is_all_white = False
+                    break
+            return dst, is_all_white
+        else:
+            return dst, False
     else:
         # print("Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT))
-        return None
+        return None, False
 
 
 #canvas -> img_rgb

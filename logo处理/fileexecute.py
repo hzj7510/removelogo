@@ -8,7 +8,7 @@ files_list = []
 
 
 def read_files(path, q, lock):
-    pic_type = ['.jpg', '.png', '.jpeg', '.PNG']
+    pic_type = ['.jpg', '.png', '.jpeg', '.JPG', '.PNG', '.JPEG']
     files = os.listdir(path)
     files = files[1:]
     for f in files:
